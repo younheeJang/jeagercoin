@@ -1,0 +1,13 @@
+{
+  "name": "jeagercoin",
+  "version": "1.0.0",
+  "description": "jeagercoin with conception for blockchain",
+  "main": "src/server.js",
+  "repository": "https://github.com/younheeJang/jeagercoin.git",
+  "author": "jeager",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "crypto-js": "^3.1.9-1"
+  }
+}

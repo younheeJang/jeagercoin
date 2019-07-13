@@ -14,6 +14,7 @@ const startP2PServer = server => {
 
 const initSocketConnection = socket => {
     sockets.push(socket);
+    handleSocketError(socket);
     socket.on("message", (data) => {
         console.log(data);
     });
@@ -21,6 +22,15 @@ const initSocketConnection = socket => {
         socket.send("welcome");
     }, 5000);
 };
+
+const handleSocketError = ws => {
+    const closeSocletConnection = ws => {
+        ws.close();
+        sockets.splice(sockets.indexOf(ws), 1);
+    };
+    ws.on("close", () => closeSocletConnection(ws));
+    ws.on("error", () => closeSocletConnection(ws));
+}
 
 const connectToPeers = newPeer => {
     const ws = new WebSockets(newPeer);

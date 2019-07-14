@@ -9,6 +9,7 @@ class Block {
     this.data = data;
   }
 }
+
 const genesisBlock = new Block(
   0,
   "2C4CEB90344F20CC4C77D626247AED3ED530C1AEE3E6E85AD494498B17414CAC",
@@ -24,6 +25,7 @@ const getNewestBlock = () => blockchain[blockchain.length - 1];
 const getTimestamp = () => new Date().getTime() / 1000;
 
 const getBlockchain = () => blockchain;
+
 const createHash = (index, previousHash, timestamp, data) =>
   CryptoJS.SHA256(
     index + previousHash + timestamp + JSON.stringify(data)
@@ -47,10 +49,13 @@ const createNewBlock = data => {
     data
   );
   addBlockToChain(newBlock);
+  require("./p2p").broadcastNewBlock();
   return newBlock;
 };
+
 const getBlocksHash = block =>
   createHash(block.index, block.previousHash, block.timestamp, block.data);
+
 const isBlockValid = (candidateBlock, latestBlock) => {
   if (!isBlockStructureValid(candidateBlock)) {
     console.log("The candidate block structure is not valid");
@@ -69,6 +74,7 @@ const isBlockValid = (candidateBlock, latestBlock) => {
   }
   return true;
 };
+
 const isBlockStructureValid = block => {
   return (
     typeof block.index === "number" &&
@@ -78,6 +84,7 @@ const isBlockStructureValid = block => {
     typeof block.data === "string"
   );
 };
+
 const isChainValid = candidateChain => {
   const isGenesisValid = block => {
     return JSON.stringify(block) === JSON.stringify(genesisBlock);
@@ -95,6 +102,7 @@ const isChainValid = candidateChain => {
   }
   return true;
 };
+
 const replaceChain = candidateChain => {
   if (
     isChainValid(candidateChain) &&

@@ -5,35 +5,39 @@ const {
   getNewestBlock,
   isBlockStructureValid,
   replaceChain,
-  getBlockchain
+  getBlockchain,
+  addBlockToChain
 } = Blockchain;
 
 const sockets = [];
 
-// Messages Types
 const GET_LATEST = "GET_LATEST";
 const GET_ALL = "GET_ALL";
 const BLOCKCHAIN_RESPONSE = "BLOCKCHAIN_RESPONSE";
-// Message Creators
+
 const getLatest = () => {
   return {
     type: GET_LATEST,
     data: null
   };
 };
+
 const getAll = () => {
   return {
     type: GET_ALL,
     data: null
   };
 };
+
 const blockchainResponse = data => {
   return {
     type: BLOCKCHAIN_RESPONSE,
     data
   };
 };
+
 const getSockets = () => sockets;
+
 const startP2PServer = server => {
   const wsServer = new WebSockets.Server({ server });
   wsServer.on("connection", ws => {
@@ -41,12 +45,14 @@ const startP2PServer = server => {
   });
   console.log("Nomadcoin P2P Server running");
 };
+
 const initSocketConnection = ws => {
   sockets.push(ws);
   handleSocketMessages(ws);
   handleSocketError(ws);
   sendMessage(ws, getLatest());
 };
+
 const parseData = data => {
   try {
     return JSON.parse(data);
@@ -55,6 +61,7 @@ const parseData = data => {
     return null;
   }
 };
+
 const handleSocketMessages = ws => {
   ws.on("message", data => {
     const message = parseData(data);
@@ -79,6 +86,7 @@ const handleSocketMessages = ws => {
     }
   });
 };
+
 const handleBlockchainResponse = receivedBlocks => {
   if (receivedBlocks.length === 0) {
     console.log("Received blocks have a length of 0");
@@ -86,13 +94,16 @@ const handleBlockchainResponse = receivedBlocks => {
   }
   const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
   if (!isBlockStructureValid(latestBlockReceived)) {
+    console.log(latestBlockReceived);
     console.log("The block structure of the block received is not valid");
     return;
   }
   const newestBlock = getNewestBlock();
   if (latestBlockReceived.index > newestBlock.index) {
     if (newestBlock.hash === latestBlockReceived.previousHash) {
-      addBlockToChain(latestBlockReceived);
+      if(addBlockToChain(latestBlockReceived)){
+          broadcastNewBlock();
+      }
     } else if (receivedBlocks.length === 1) {
       sendMessageToAll(getAll());
     } else {
@@ -110,6 +121,8 @@ const responseLatest = () => blockchainResponse([getNewestBlock()]);
 
 const responseAll = () => blockchainResponse(getBlockchain());
 
+const broadcastNewBlock = () => sendMessageToAll(responseLatest());
+
 const handleSocketError = ws => {
   const closeSocketConnection = ws => {
     ws.close();
@@ -126,5 +139,6 @@ const connectToPeers = newPeer => {
 };
 module.exports = {
   startP2PServer,
-  connectToPeers
+  connectToPeers,
+  broadcastNewBlock
 };

@@ -20,7 +20,7 @@ const genesisBlock = new Block(
   0,
   "2C4CEB90344F20CC4C77D626247AED3ED530C1AEE3E6E85AD494498B17414CAC",
   null,
-  1520312194926,
+  1563272892,
   "This is the genesis!!",
   0,
   0
@@ -30,7 +30,7 @@ let blockchain = [genesisBlock];
 
 const getNewestBlock = () => blockchain[blockchain.length - 1];
 
-const getTimestamp = () => new Date().getTime() / 1000;
+const getTimestamp = () => Math.round(new Date().getTime() / 1000);
 
 const getBlockchain = () => blockchain;
 
@@ -114,7 +114,21 @@ const hashMatchesDifficulty = (hash, difficulty) => {
 }
 
 const getBlocksHash = block =>
-  createHash(block.index, block.previousHash, block.timestamp, block.data, block.difficulty, block.nonce);
+  createHash(
+      block.index, 
+      block.previousHash, 
+      block.timestamp, 
+      block.data, 
+      block.difficulty, 
+      block.nonce
+  );
+
+const isTimeStampValid = (newBlock, oldBlock) => {
+    return (
+        oldBlock.timestamp - 60 < newBlock.timestamp &&
+        newBlock.timestamp - 60 < getTimestamp()
+    );
+}
 
 const isBlockValid = (candidateBlock, latestBlock) => {
   if (!isBlockStructureValid(candidateBlock)) {
@@ -130,6 +144,9 @@ const isBlockValid = (candidateBlock, latestBlock) => {
     return false;
   } else if (getBlocksHash(candidateBlock) !== candidateBlock.hash) {
     console.log("The hash of this block is invalid");
+    return false;
+  } else if(!isTimeStampValid(candidateBlock, latestBlock)){
+      console.log("the timestamp of this block is dodgy");
     return false;
   }
   return true;

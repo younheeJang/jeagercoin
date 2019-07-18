@@ -1,7 +1,8 @@
 const CryptoJS = require("crypto-js"),
-    elliptic = require("elliptic");
+    elliptic = require("elliptic"),
+    utils = require("./utils");
 
-const ec = new EC("secp256k1");
+const ec = new elliptic.ec("secp256k1");
 
 class TxOut{
     constructor(address, amount){
@@ -66,6 +67,11 @@ const signTxIn = (tx, txInIndex, privateKey, uTxOut) => {
     if(referencedUTxOut === null){
         return;
     }
+    const key = ec.keyFromPrivate(privateKey, "hex");
+
+    //export DER encoded signature in array
+    const signature = utils.toHexString(key.sign(dataToSign).toDER());
+    return signature;
 };
 
 

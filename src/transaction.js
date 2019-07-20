@@ -105,3 +105,70 @@ const updateUTxOuts = (newTxs, uTxOutList) => {
 // a(40) as input ----> transaction ----> y(10)/u(30) get 2 outputs.
 // the last one parameter's name, resultingUTxOuts 
 // [b, c, d, y, u]
+
+
+
+//process structure valid or not
+const isTxInStructureValid = (txIn) => {
+    if(txIn === null) {
+        return false;
+    } else if(typeof txIn.signature !== "string"){
+        return false;
+    } else if(typeof txIn.txOutId !== "string"){
+        return false;
+    } else if(typeof txIn.txOutIndex !== "number"){
+        return false;
+    } else {
+        return true;
+    }
+}
+
+const isAddressValid = (address) => {
+    //for less length 130
+    if(address.length !== 130){
+        return false;
+    //for not hexadecimal pattern.
+    }else if(address.match("^[a-fA-F0-9]+$") === null){
+        return false;
+    //for wrong public key
+    }else if(!address.startsWith("04")){
+        return false;
+    }else {
+        return true;
+    }
+}
+
+const isTxOutStructureValid = (txOut) => {
+    if(txOut === null) {
+        return false;
+    }else if(typeof txOut.address !== "string"){
+        return false;
+    }else if(!isAddressValid(txOut.address)){
+        return false;
+    }else if(typeof txOut.amount !== "number"){
+        return false;
+    }else {
+        return true;
+    }
+} 
+
+const isTxStructureValid = (tx) => {
+    if(typeof tx.id !== "string"){
+        console.log("tx id is not valid");
+        return false;
+    }else if(!(tx.txIns instanceof Array)){
+        console.log("the txIns are not an array");
+        return false;
+    }else if(!tx.txIns.map(isTxInStructureValid).reduce((a, b) => a && b, true)){
+        console.log("the structure of one of the txIn is not valid");
+        return false;
+    }else if(!(tx.txOuts instanceof Array)){
+        console.log("the txOuts are not an array");
+        return false;
+    }else if(){
+        console.log("the structure of one of the txOut is not valid");
+        return false;
+    }else {
+        return true;
+    }
+}

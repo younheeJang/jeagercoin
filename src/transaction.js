@@ -74,4 +74,34 @@ const signTxIn = (tx, txInIndex, privateKey, uTxOut) => {
     return signature;
 };
 
+//when input worked properly, the 2 output comes out, 
+//giver's output is empty as many as the money sent, 
+//roceiver's output should be updated with money sent from giver.
+const updateUTxOuts = (newTxs, uTxOutList) => {
+    const newUTxOuts = newTxs.map(tx => {
+        tx.txOuts.map((txOut, index) => {
+            new UTxOut(tx.id, index, txOut.address, txOut.amount)
+        })
+    })
+    .reduce((a, b) => a.contact(b), []);
 
+    const spentTxOuts = newTxs
+        .map(tx => tx.txIns)
+        .reduce((a, b) => a.concat(b), [])
+        .map(txIn => new UTxOut(txIn.txOutId, txIn.txOutIndex, "", 0));
+    
+    const resultingUTxOuts = uTxOutList.filter(
+        uTxO => !findUTxOut(uTxO.txOutId, uTxO.txOutIndex, spentTxOuts)
+        )
+        .concat(newUTxOuts);
+    
+    return resultingUTxOuts;
+}
+
+
+
+// [a(40), b, c, d]
+
+// a(40) as input ----> transaction ----> y(10)/u(30) get 2 outputs.
+// the last one parameter's name, resultingUTxOuts 
+// [b, c, d, y, u]

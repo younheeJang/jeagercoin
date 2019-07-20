@@ -51,8 +51,8 @@ const getTxId = tx => {
 //you find the output first and use it for using input.
 const findUTxOut = (txOutId, txOutIndex, uTxOutList) => {
     return uTxOutList.find(
-        uTxOut => uTxOut.txOutId === txOutId &&
-        uTxOut.txOutIndex === txOutIndex
+        uTxO => uTxO.txOutId === txOutId &&
+        uTxO.txOutIndex === txOutIndex
         );
 }
 
@@ -159,14 +159,56 @@ const isTxStructureValid = (tx) => {
     }else if(!(tx.txIns instanceof Array)){
         console.log("the txIns are not an array");
         return false;
-    }else if(!tx.txIns.map(isTxInStructureValid).reduce((a, b) => a && b, true)){
+    }else if(
+        !tx.txIns.map(isTxInStructureValid).reduce((a, b) => a && b, true)
+    ){
         console.log("the structure of one of the txIn is not valid");
         return false;
     }else if(!(tx.txOuts instanceof Array)){
         console.log("the txOuts are not an array");
         return false;
-    }else if(){
+    }else if(
+        !tx.txOut.map(isTxOutStructureValid).reduce((a, b) => a && b, true)
+    ){
         console.log("the structure of one of the txOut is not valid");
+        return false;
+    }else {
+        return true;
+    }
+}
+
+//transaction input all referenced output so, checking this same or not.
+const validateTxIn = (txIn, tx, uTxOutList) => {
+    const wantedTxOut = uTxOutList.find(uTxO => uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex);
+    if(wantedTxOut === null){
+        return false;
+    }else {
+        //from address, create public key, verify with transaction id and transaction input signature.
+        const address = wantedTxOut.address;
+        const key = ec.keyFromPublic(address, "hex");
+        return key.verify(tx.id, txIn.signature);
+    }
+}
+
+//validate transaction content.
+const validateTx = (tx, uTxOutList) => {
+    if(getTxId(tx) !== tx.id){
+        return false;
+    }
+
+    const hasValidTxIns = tx.txIns.map(txIn => validateTxIn(txIn, tx, uTxOutList));
+
+    if(!hasValidTxIns){
+        return false;
+    }
+
+    const amountInTxIns = 
+
+    const amountInTxOuts =
+
+    //when transaction input occured, get 2 outputs.
+    //and amount from input and outputs value should be same.
+    if(amountInTxIns !== amountInTxOuts){
         return false;
     }else {
         return true;

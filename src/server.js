@@ -2,11 +2,13 @@ const express = require("express"),
     bodyParser = require("body-parser"),
     morgan = require("morgan"),
     Blockchain = require("./blockchain"),
-    P2P = require("./p2p");
+    P2P = require("./p2p"),
+    Wallet = require("./wallet");
 
 
 const { getBlockchain, createNewBlock } = Blockchain;
 const { startP2PServer, connectToPeers } = P2P;
+const { initWallet } = Wallet;
 
 const PORT = process.env.HTTP_PORT || 3000;
 
@@ -33,4 +35,5 @@ app.post("/peers", (req, res) => {
 
 const server = app.listen(PORT, () => console.log(`jeagercoin HTTP server running on ${PORT}`));
 
+initWallet();
 startP2PServer(server);

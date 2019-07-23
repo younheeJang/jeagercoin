@@ -14,9 +14,9 @@ class TxOut{
 }
 
 class TxIn{
-    //uTxOutId
-    //uTxOUtIndex
-    //Signature
+    //txOutId
+    //txOUtIndex
+    //Signature : this not signed yet.
 }
 
 class Transaction {
@@ -61,13 +61,16 @@ const findUTxOut = (txOutId, txOutIndex, uTxOutList) => {
 
 //sigining transaction input
 //+using library called crypto.js and elliptic
-const signTxIn = (tx, txInIndex, privateKey, uTxOut) => {
+const signTxIn = (tx, txInIndex, privateKey, uTxOutList) => {
     const txIn = tx.txIns[txInIndex];
     const dataToSign = tx.id;
-
-    const referencedUTxOut = findUTxOut(txIn.txOutId, txIn.txOutIndex, uTxOuts);
+    const referencedUTxOut = findUTxOut(txIn.txOutId, txIn.txOutIndex, uTxOutList);
     if(referencedUTxOut === null){
         return;
+    }
+    const referencedAddress = referencedUTxOut.address;
+    if(getPublicKey(privateKey) !== referencedAddress){
+        return false;
     }
     const key = ec.keyFromPrivate(privateKey, "hex");
 
@@ -75,6 +78,14 @@ const signTxIn = (tx, txInIndex, privateKey, uTxOut) => {
     const signature = utils.toHexString(key.sign(dataToSign).toDER());
     return signature;
 };
+
+
+const getPublicKey = (privateKey) => {
+    return ec
+        .keyFromPrivate(privateKey, "hex")
+        .getPublic()
+        .encode("hex");
+}
 
 //when input worked properly, the 2 output comes out, 
 //giver's output is empty as many as the money sent, 
@@ -247,3 +258,12 @@ const validateCoinbaseTx = (tx, blockIndex) => {
         return true;
     }
 };
+
+module.exports = {
+    getPublicKey,
+    getTxId,
+    signTxIn,
+    TxIn,
+    Transaction,
+    TxOut
+}

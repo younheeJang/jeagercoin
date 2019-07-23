@@ -42,7 +42,7 @@ const getTxId = tx => {
         .reduce((a, b) => a + b, "");
 
     const txOutContent = tx.txOuts
-        .map(txOUt => txOut.address + txOut.amount)
+        .map(txOut => txOut.address + txOut.amount)
         .reduce((a, b) => a + b, "");
     
     return CryptoJS.SHA256(txInContent + txOutContent).toString();
@@ -276,8 +276,8 @@ const createCoinbaseTx = (address, blockIndex) => {
     const txIn = new TxIn();
     txIn.signature = "";
     txIn.txOutId = blockIndex;
-    tx.txIns[txIn];
-    tx.txOut = [new TxOut(address, COINBASE_AMOUNT)];
+    tx.txIns = [txIn];
+    tx.txOuts = [new TxOut(address, COINBASE_AMOUNT)];
     tx.id = getTxId(tx);
     return tx;
 }

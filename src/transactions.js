@@ -34,7 +34,6 @@ class UTxOut {
     }
 }
 
-let uTxOuts = [];
 
 //get id as hash.
 const getTxId = tx => {
@@ -245,19 +244,43 @@ const validateTx = (tx, uTxOutList) => {
 
 const validateCoinbaseTx = (tx, blockIndex) => {
     if(getTxId(tx) !== tx.id){
+        console.log("invalid coinbase tx id");
         return false;
     }else if(tx.txIns.length !== 1){
+        console.log("coinbase tx should only have on input");
         return false;
     }else if(tx.txIns[0].txOutIndex !== blockIndex){
+        console.log(
+            "the txOutIndex of the coinbase tx should be the same as the block index"
+        );
         return false;
     }else if(tx.txOuts.length !== 1){
+        console.log("coinbase tx should only have one output");
         return false;
     }else if(tx.txOuts[0].amount !== COINBASE_AMOUNT){
+        console.log(
+            `coinbase tx should have an amount of only ${COINBASE_AMOUNT} and it has ${
+                tx.txOuts[0].amount
+            }`
+        );
         return false;
     }else{
         return true;
     }
 };
+
+//do when miner find block : create coinbase transaction which has
+//only one input and output.
+const createCoinbaseTx = (address, blockIndex) => {
+    const tx = new Transaction();
+    const txIn = new TxIn();
+    txIn.signature = "";
+    txIn.txOutId = blockIndex;
+    tx.txIns[txIn];
+    tx.txOut = [new TxOut(address, COINBASE_AMOUNT)];
+    tx.id = getTxId(tx);
+    return tx;
+}
 
 module.exports = {
     getPublicKey,
@@ -265,5 +288,6 @@ module.exports = {
     signTxIn,
     TxIn,
     Transaction,
-    TxOut
+    TxOut,
+    createCoinbaseTx
 }

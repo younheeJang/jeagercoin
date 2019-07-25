@@ -283,6 +283,19 @@ const createCoinbaseTx = (address, blockIndex) => {
     return tx;
 }
 
+const hasDuplicates = (txIns) => {
+    const groups = _.countBy(txIns, txIn => txIn.txOutId + txIn.txOutIndex);
+
+    return _(groups).map(value => {
+        if(value > 1){
+            console.log("found a duplicated txIn");
+            return true;
+        }else{
+            return false;
+        }
+    }).includes(true)
+}
+
 const validateBlockTx = (tx, uTxOutList, blockIndex) => {
     const coinbaseTx = tx[0];
     if(!validateCoinbaseTx(coinbaseTx, blockIndex)){
@@ -294,11 +307,12 @@ const validateBlockTx = (tx, uTxOutList, blockIndex) => {
         .flatten()
         .value();
     
-    if(){
+    if(hasDuplicates(txIns)){
         console.log("found dupocated txIns");
         return false;
     }
 
+    const nonCoinbaseTxs = tx.slice(1);
 };
 
 const processTxs = (txs, uTxOutList, blockIndex) => {

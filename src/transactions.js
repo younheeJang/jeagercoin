@@ -91,12 +91,13 @@ const getPublicKey = (privateKey) => {
 //giver's output is empty as many as the money sent, 
 //roceiver's output should be updated with money sent from giver.
 const updateUTxOuts = (newTxs, uTxOutList) => {
-    const newUTxOuts = newTxs.map(tx => {
-        tx.txOuts.map((txOut, index) => {
-            new UTxOut(tx.id, index, txOut.address, txOut.amount)
-        })
-    })
-    .reduce((a, b) => a.contact(b), []);
+    const newUTxOuts = newTxs
+    .map(tx => 
+     tx.txOuts.map(
+            (txOut, index) => new UTxOut(tx.id, index, txOut.address, txOut.amount)
+        )
+    )
+    .reduce((a, b) => a.concat(b), []);
 
     const spentTxOuts = newTxs
         .map(tx => tx.txIns)
@@ -276,7 +277,8 @@ const createCoinbaseTx = (address, blockIndex) => {
     const tx = new Transaction();
     const txIn = new TxIn();
     txIn.signature = "";
-    txIn.txOutId = blockIndex;
+    txIn.txOutId = "";
+    txIn.txOutIndex = blockIndex;
     tx.txIns = [txIn];
     tx.txOuts = [new TxOut(address, COINBASE_AMOUNT)];
     tx.id = getTxId(tx);
@@ -296,14 +298,14 @@ const hasDuplicates = (txIns) => {
     }).includes(true)
 }
 
-const validateBlockTx = (txs, uTxOutList, blockIndex) => {
+const validateBlockTxs = (txs, uTxOutList, blockIndex) => {
     const coinbaseTx = txs[0];
     if(!validateCoinbaseTx(coinbaseTx, blockIndex)){
         console.log("coinbase tx is invalid");
     }
 
     const txIns = _(txs)
-        .map(tx => tx.Ins)
+        .map(tx => tx.txIns)
         .flatten()
         .value();
     
@@ -333,5 +335,6 @@ module.exports = {
     TxIn,
     Transaction,
     TxOut,
-    createCoinbaseTx
+    createCoinbaseTx,
+    processTxs
 }

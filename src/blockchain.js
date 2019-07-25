@@ -4,7 +4,7 @@ const CryptoJS = require("crypto-js"),
     Transaction = require("./transactions");
 
 
-const { createCoinbaseTx } = Transaction;
+const { createCoinbaseTx, processTxs } = Transaction;
 const { getBalance, getPublicFromWallet } = Wallet;
 
 const BLOCK_GENERATION_INTERVAL = 10;
@@ -221,7 +221,19 @@ const replaceChain = candidateChain => {
 
 const addBlockToChain = candidateBlock => {
   if (isBlockValid(candidateBlock, getNewestBlock())) {
-    blockchain.push(candidateBlock);
+    const processedTxs = processTxs(
+        candidateBlock.data, 
+        uTxOuts, 
+        candidateBlock.index
+    );
+    if(processedTxs === null){
+      console.log("couldn't process txs");
+      return false;
+    }else{
+      blockchain.push(candidateBlock);
+       uTxOuts = processedTxs;
+       return true;
+    }
     return true;
   } else {
     return false;

@@ -1,49 +1,68 @@
 const _ = require("lodash"),
-    Transactions = require("./transactions");
-
+  Transactions = require("./transactions");
 const { validateTx } = Transactions;
-
 let mempool = [];
-
 const getMempool = () => _.cloneDeep(mempool);
-
 const getTxInsInPool = mempool => {
-    return _(mempool)
-        .map(tx => tx.txIns)
-        .flatten()
-        .value();
+  return _(mempool)
+    .map(tx => tx.txIns)
+    .flatten()
+    .value();
+};
+const isTxValidForPool = (tx, mempool) => {
+  const txInsInPool = getTxInsInPool(mempool);
+  const isTxInAlreadyInPool = (txIns, txIn) => {
+    return _.find(txIns, txInInPool => {
+      return (
+        txIn.txOutIndex === txInInPool.txOutIndex &&
+        txIn.txOutId === txInInPool.txOutId
+      );
+    });
+  };
+  for (const txIn of tx.txIns) {
+    if (isTxInAlreadyInPool(txInsInPool, txIn)) {
+      return false;
+    }
+  }
+  return true;
 };
 
-const isTxValidForPool = (tx, mempool) => {
-    const txInsInPool = getTxInsInPool(mempool);
+const hasTxIn = (txIn, uTxOutList) => {
+  const foundTxIn = uTxOutList.find(
+    uTxO => uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex
+  );
 
-    const isTxInAllreadyInPool = (txIns, txIn) => {
-        return _.find(txIns, txInInPool => {
-            return (
-                txIn.txOutIndex === txInInPool.txOutIndex &&
-                txIn.txOutId === txInInPool.txOutId
-            );
-        });
-    };
+  return foundTxIn !== undefined;
+};
 
-    for(const txIn of tx.txIns){
-        if(isTxInAllreadyInPool(txInsInPool, txIn)){
-            return false;
-        }
+const updateMempool = uTxOutList => {
+  const invalidTxs = [];
+
+  for (const tx of mempool) {
+    for (const txIn of tx.txIns) {
+      if (!hasTxIn(txIn, uTxOutList)) {
+        invalidTxs.push(tx);
+        break;
+      }
     }
-    return true;
-}
+  }
+
+  if (invalidTxs.length > 0) {
+    mempool = _.without(mempool, ...invalidTxs);
+  }
+};
 
 const addToMempool = (tx, uTxOutList) => {
-    if(!validateTx(tx, uTxOutList)){
-        throw Error("this transaction is invalid, will not add it to pool");
-    }else if(!isTxValidForPool(tx, mempool)){
-        throw Error("this tx is not valid for the pool, will not add it.");
-    }
-    mempool.push(tx);
-}
+  if (!validateTx(tx, uTxOutList)) {
+    throw Error("This tx is invalid. Will not add it to pool");
+  } else if (!isTxValidForPool(tx, mempool)) {
+    throw Error("This tx is not valid for the pool. Will not add it.");
+  }
+  mempool.push(tx);
+};
 
 module.exports = {
-    addToMempool,
-    getMempool
-}
+  addToMempool,
+  getMempool,
+  updateMempool
+};

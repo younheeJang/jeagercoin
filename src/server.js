@@ -24,6 +24,7 @@ app
     })
     .post((req, res) => {
     const newBlock = createNewBlock();
+    console.log(newBlock);
     res.send(newBlock);
 });
 

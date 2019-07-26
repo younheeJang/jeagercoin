@@ -1,11 +1,14 @@
 const CryptoJS = require("crypto-js"),
+    _ = require("lodash"),
     Wallet = require("./wallet"),
+    Mempool = require("./mempool"),
     hexToBinary = require("hex-to-binary"),
     Transaction = require("./transactions");
 
 
 const { createCoinbaseTx, processTxs } = Transaction;
-const { getBalance, getPublicFromWallet } = Wallet;
+const { getBalance, getPublicFromWallet, createTx, getPrivateFromWallet } = Wallet;
+const { addToMempool } = Mempool;
 
 const BLOCK_GENERATION_INTERVAL = 10;
 const DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
@@ -240,8 +243,18 @@ const addBlockToChain = candidateBlock => {
   }
 };
 
+//not just return it directly, get thing deep cloned cause
+//this unspend output list referenced so many places.
+const getUTxOutList = () => _.cloneDeep(uTxOuts);
+
 const getAccountBalance = () => 
     getBalance(getPublicFromWallet(), uTxOuts);
+
+const sendTx = (address, amount) => {
+    const tx = createTx(address, amount, getPrivateFromWallet(), getUTxOutList());
+    addToMempool(tx, getUTxOutList());
+    return tx;
+};
 
 module.exports = {
   getNewestBlock,
@@ -250,5 +263,6 @@ module.exports = {
   isBlockStructureValid,
   addBlockToChain,
   replaceChain,
-  getAccountBalance
+  getAccountBalance,
+  sendTx
 };

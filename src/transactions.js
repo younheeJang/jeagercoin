@@ -64,8 +64,13 @@ const findUTxOut = (txOutId, txOutIndex, uTxOutList) => {
 const signTxIn = (tx, txInIndex, privateKey, uTxOutList) => {
     const txIn = tx.txIns[txInIndex];
     const dataToSign = tx.id;
-    const referencedUTxOut = findUTxOut(txIn.txOutId, txIn.txOutIndex, uTxOutList);
-    if(referencedUTxOut === null){
+    const referencedUTxOut = findUTxOut(
+        txIn.txOutId, 
+        txIn.txOutIndex, 
+        uTxOutList
+    );
+    if(referencedUTxOut === null || referencedUTxOut === undefined){
+        throw Error("could't find the referenced uTxOut, not signing");
         return;
     }
     const referencedAddress = referencedUTxOut.address;
@@ -182,7 +187,7 @@ const isTxStructureValid = (tx) => {
         console.log("the txOuts are not an array");
         return false;
     }else if(
-        !tx.txOut.map(isTxOutStructureValid).reduce((a, b) => a && b, true)
+        !tx.txOuts.map(isTxOutStructureValid).reduce((a, b) => a && b, true)
     ){
         console.log("the structure of one of the txOut is not valid");
         return false;
